@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {ActivityIndicator, Alert, Button, Dimensions, FlatList, Image, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import { CardAdd, CardProfile} from '../../components';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { listData } from '../../services/recoils/atoms';
 import { deletDataUser, editDataUser, getDataUser, getDetailUser, postDataUsers } from '../../services';
 import Modal from "react-native-modal";
+import { useDispatch, useSelector } from 'react-redux';
+import { setListUser } from '../../redux/actions/list';
 
 const SCREEN_WIDTH = Dimensions.get('screen').width;
 const Home = () => {
-    const [dataLists, setDataList] = useRecoilState(listData);
+    const dispatch = useDispatch();
+    const dataList = useSelector((store: any) => store.listUser);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [firstName, setFirstName] = useState<string>('');
     const [lastName, setLastName] = useState<string>('');
@@ -19,20 +20,20 @@ const Home = () => {
         id: '',
         firstName: '',
         lastName: '',
-        age: 20,
+        age: '',
         photo: ''
     })
 
     const handleGetData = async () => {
         const response = await getDataUser();
-        setDataList(response.data);
+        dispatch(setListUser(response.data))
 
     }
     type dataProps = {
         id: string;
         firstName: string;
         lastName: string;
-        age: number;
+        age: string;
         photo: string;
     }
     const checkValidate = () => {
@@ -44,7 +45,7 @@ const Home = () => {
         if(dataEdit.id) {
             if(dataEdit.lastName === lastName && 
                 dataEdit.firstName === firstName && 
-                dataEdit.age === ageNumber &&
+                dataEdit.age === ageNumber.toString() &&
                 dataEdit.photo === image) {
                 
                 setDisableButton(true);
@@ -62,7 +63,7 @@ const Home = () => {
             id: '',
             firstName: '',
             lastName: '',
-            age: 20,
+            age: '',
             photo: ''
         })
     }
@@ -133,7 +134,6 @@ const Home = () => {
     }
 
     const handleDeleteData = async (id: string) => {
-        console.log("idadada", id)
         const response = await deletDataUser(id);
 
         if(response)
@@ -164,7 +164,7 @@ const Home = () => {
     useEffect(()=> {
         setFirstName(dataEdit.firstName);
         setLastName(dataEdit.lastName);
-        setAge(dataEdit.age > 0 ? dataEdit.age.toString() : '');
+        setAge(dataEdit.age ? dataEdit.age.toString() : '');
         setImage(dataEdit.photo);
     }, [dataEdit])
     
@@ -201,12 +201,12 @@ const Home = () => {
 
     return (
         <SafeAreaView>
-                {dataLists && (
+                {dataList && (
                     <CardAdd onClick={()=> setShowModal(true)}/>
                 )}
                <FlatList
                     style={{marginBottom: 160}}
-                    data={dataLists}
+                    data={dataList.listUser}
                     columnWrapperStyle={styles.rowList}
                     renderItem={({item}) => <RenderItem id={item.id} firstName={item.firstName} lastName={item.lastName} age={item.age} image={item.photo}/>}
                     keyExtractor={item => item.id}
